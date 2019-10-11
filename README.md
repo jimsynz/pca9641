@@ -1,6 +1,7 @@
 # PCA9641
 
-**TODO: Add description**
+Driver for the PCA9641 2-channel I2C bus master arbiter chip.
+
 
 ## Installation
 
