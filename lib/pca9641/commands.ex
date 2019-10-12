@@ -180,7 +180,7 @@ defmodule PCA9641.Commands do
   - `true` -> Connect downstream bus; the internal switch is closed only if LOCK_GRANT = 1.
   """
   @spec bus_connect(pid, boolean) :: :ok | {:error, term}
-  def bus_connect(pid, value), do: write_bit_as_boolean(pid, :control, 3, value)
+  def bus_connect(pid, value), do: write_bit_as_boolean(pid, :control, 2, value)
 
   @doc """
   LOCK_GRANT
