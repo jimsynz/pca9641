@@ -40,12 +40,15 @@ defmodule PCA9641.Device do
     {:ok, _} = Registry.register(PCA9641.Registry, name, self())
     Process.flag(:trap_exit, true)
 
-    Logger.info("Connecting to PCA9641 device on #{inspect(name)}")
-
     with {:ok, pid} <- Commands.start_link(bus, address),
+         {:ok, 0x38} <- Commands.id(pid),
          state <- Map.put(state, :i2c, pid),
          state <- Map.put(state, :name, name) do
+      Logger.info("Connected to PCA9641 device on #{inspect(name)}")
       {:ok, state}
+    else
+      {:ok, id} when is_integer(id) -> {:error, "Incorrect device ID #{id}"}
+      {:error, reason} -> {:error, reason}
     end
   end
 

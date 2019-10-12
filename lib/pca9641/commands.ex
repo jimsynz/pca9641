@@ -741,7 +741,7 @@ defmodule PCA9641.Commands do
       when is_integer(reserve_time) and reserve_time >= 0 and reserve_time <= 0xFF do
     with :ok <- lock_request(pid, true),
          :ok <- reserve_time(pid, reserve_time),
-         :ok <- block_until_lock_acquired(pid),
+         :ok <- block_until_lock_granted(pid),
          :ok <- bus_connect(pid, true) do
       :ok
     end
@@ -753,12 +753,12 @@ defmodule PCA9641.Commands do
   @spec abandon_downstream_bus(pid) :: :ok | {:error, term}
   def abandon_downstream_bus(pid), do: lock_request(pid, false)
 
-  defp block_until_lock_acquired(pid) do
+  defp block_until_lock_granted(pid) do
     if lock_grant?(pid) do
       :ok
     else
       :timer.sleep(5)
-      block_until_lock_acquired(pid)
+      block_until_lock_granted(pid)
     end
   end
 
