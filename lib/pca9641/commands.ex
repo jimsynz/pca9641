@@ -739,10 +739,13 @@ defmodule PCA9641.Commands do
   @spec request_downstream_bus(pid, non_neg_integer) :: :ok | {:error, term}
   def request_downstream_bus(pid, reserve_time)
       when is_integer(reserve_time) and reserve_time >= 0 and reserve_time <= 0xFF do
-    with :ok <- lock_request(pid, true),
-         :ok <- reserve_time(pid, reserve_time),
+    with :ok <- Registers.reserve_time(pid, reserve_time),
+         # Request the bus lock.
+         :ok <- Registers.control(pid, 0x1),
          :ok <- block_until_lock_granted(pid),
-         :ok <- bus_connect(pid, true) do
+         # Connect the downstream bus.
+         :ok <- Registers.control(pid, 0x5),
+         true <- bus_connect?(pid) do
       :ok
     end
   end
@@ -751,7 +754,7 @@ defmodule PCA9641.Commands do
   Abandon access to the downstream bus.
   """
   @spec abandon_downstream_bus(pid) :: :ok | {:error, term}
-  def abandon_downstream_bus(pid), do: lock_request(pid, false)
+  def abandon_downstream_bus(pid), do: Registers.control(pid, 0)
 
   defp block_until_lock_granted(pid) do
     if lock_grant?(pid) do
