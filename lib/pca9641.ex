@@ -1,18 +1,30 @@
 defmodule PCA9641 do
   @moduledoc """
-  Documentation for PCA9641.
+  PCA9641 Driver for Elixir using Circuits.
+
+  ## Usage:
+  Add your devices to your config like so:
+
+      config :pca9641,
+        devices: [
+          %{bus: "i2c-1", address: 0x70, interrupt_pin: 7}
+        ]
+
+  Then use the functions in [PCA9641.Device] to send image data.
+  Pretty simple.
   """
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> PCA9641.hello()
-      :world
-
+  Connect to an PCA9641 device.
   """
-  def hello do
-    :world
+  def connect(config),
+    do: Supervisor.start_child(PCA9641.Supervisor, {PCA9641.Device, config})
+
+  @doc """
+  Disconnect an PCA9641 device.
+  """
+  def disconnect(device_name) do
+    Supervisor.terminate_child(PCA9641.Supervisor, {PCA9641.Device, device_name})
+    Supervisor.delete_child(PCA9641.Supervisor, {PCA9641.Device, device_name})
   end
 end

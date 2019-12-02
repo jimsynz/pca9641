@@ -1,6 +1,6 @@
 defmodule PCA9641.Commands do
   alias PCA9641.Registers
-  alias ElixirALE.I2C
+  alias Circuits.I2C
   use Bitwise
 
   @moduledoc """
@@ -8,18 +8,27 @@ defmodule PCA9641.Commands do
   the device.
   """
 
-  @doc false
-  def start_link(bus, address), do: I2C.start_link(bus, address)
+  @type bus_address :: {I2C.bus(), I2C.address()}
 
   @doc false
-  def release(pid), do: I2C.release(pid)
+  @spec start_link(I2C.bus(), I2C.address()) :: {:ok, bus_address} | {:error, term}
+  def start_link(bus, address) when is_integer(address) and address >= 0 and address <= 127 do
+    case I2C.open(bus) do
+      {:ok, bus} -> {:ok, {bus, address}}
+      error -> error
+    end
+  end
+
+  @doc false
+  @spec release(bus_address) :: :ok
+  def release({bus, _address}), do: I2C.release(bus)
 
   @doc """
   Retrieve the device ID.  For PCA9641 this should be 0x38.
   """
-  @spec id(pid) :: {:ok, non_neg_integer} | {:error, term}
-  def id(pid) do
-    <<id>> = Registers.id(pid)
+  @spec id(bus_address) :: {:ok, non_neg_integer} | {:error, term}
+  def id(bus_address) do
+    <<id>> = Registers.id(bus_address)
     {:ok, id}
   end
 
@@ -29,8 +38,8 @@ defmodule PCA9641.Commands do
   Master can set this register bit for setting priority of the winner when two
   masters request the downstream bus at the same time.
   """
-  @spec priority?(pid) :: boolean
-  def priority?(pid), do: read_bit_as_boolean(pid, :control, 7)
+  @spec priority?(bus_address) :: boolean
+  def priority?(bus_address), do: read_bit_as_boolean(bus_address, :control, 7)
 
   @doc """
   PRIORITY
@@ -38,8 +47,8 @@ defmodule PCA9641.Commands do
   Master can set this register bit for setting priority of the winner when two
   masters request the downstream bus at the same time.
   """
-  @spec priority(pid, boolean) :: :ok | {:error, term}
-  def priority(pid, value), do: write_bit_as_boolean(pid, :control, 7, value)
+  @spec priority(bus_address, boolean) :: :ok | {:error, term}
+  def priority(bus_address, value), do: write_bit_as_boolean(bus_address, :control, 7, value)
 
   @doc """
   SMBUS_DIS
@@ -51,8 +60,9 @@ defmodule PCA9641.Commands do
   - `true` -> Connectivity between master and downstream bus will be
     disconnected upon detecting an SMBus time-out condition.
   """
-  @spec downstream_disconnect_on_timeout?(pid) :: boolean
-  def downstream_disconnect_on_timeout?(pid), do: read_bit_as_boolean(pid, :control, 6)
+  @spec downstream_disconnect_on_timeout?(bus_address) :: boolean
+  def downstream_disconnect_on_timeout?(bus_address),
+    do: read_bit_as_boolean(bus_address, :control, 6)
 
   @doc """
   SMBUS_DIS
@@ -64,9 +74,9 @@ defmodule PCA9641.Commands do
   - `true` -> Connectivity between master and downstream bus will be
     disconnected upon detecting an SMBus time-out condition.
   """
-  @spec downstream_disconnect_on_timeout(pid, boolean) :: :ok | {:error, term}
-  def downstream_disconnect_on_timeout(pid, value),
-    do: write_bit_as_boolean(pid, :control, 6, value)
+  @spec downstream_disconnect_on_timeout(bus_address, boolean) :: :ok | {:error, term}
+  def downstream_disconnect_on_timeout(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :control, 6, value)
 
   @doc """
   IDLE_TIMER_DIS
@@ -81,8 +91,8 @@ defmodule PCA9641.Commands do
     reserve timer is disabled, if the downstream bus is idle for more than 100
     ms, the connection between master and downstream bus will be disconnected.
   """
-  @spec idle_timer_disconnect?(pid) :: boolean
-  def idle_timer_disconnect?(pid), do: read_bit_as_boolean(pid, :control, 5)
+  @spec idle_timer_disconnect?(bus_address) :: boolean
+  def idle_timer_disconnect?(bus_address), do: read_bit_as_boolean(bus_address, :control, 5)
 
   @doc """
   IDLE_TIMER_DIS
@@ -97,8 +107,9 @@ defmodule PCA9641.Commands do
     reserve timer is disabled, if the downstream bus is idle for more than 100
     ms, the connection between master and downstream bus will be disconnected.
   """
-  @spec idle_timer_disconnect(pid, boolean) :: :ok | {:error, term}
-  def idle_timer_disconnect(pid, value), do: write_bit_as_boolean(pid, :control, 5, value)
+  @spec idle_timer_disconnect(bus_address, boolean) :: :ok | {:error, term}
+  def idle_timer_disconnect(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :control, 5, value)
 
   @doc """
   SMBUS_SWRST
@@ -110,8 +121,8 @@ defmodule PCA9641.Commands do
   - `true` -> Enable sending SMBus time-out to downstream bus, after receiving a
     general call soft reset from master.
   """
-  @spec smbus_software_reset?(pid) :: boolean
-  def smbus_software_reset?(pid), do: read_bit_as_boolean(pid, :control, 4)
+  @spec smbus_software_reset?(bus_address) :: boolean
+  def smbus_software_reset?(bus_address), do: read_bit_as_boolean(bus_address, :control, 4)
 
   @doc """
   SMBUS_SWRST
@@ -123,8 +134,9 @@ defmodule PCA9641.Commands do
   - `true` -> Enable sending SMBus time-out to downstream bus, after receiving a
     general call soft reset from master.
   """
-  @spec smbus_software_reset(pid, boolean) :: :ok | {:error, term}
-  def smbus_software_reset(pid, value), do: write_bit_as_boolean(pid, :control, 4, value)
+  @spec smbus_software_reset(bus_address, boolean) :: :ok | {:error, term}
+  def smbus_software_reset(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :control, 4, value)
 
   @doc """
   BUS_INIT
@@ -139,8 +151,8 @@ defmodule PCA9641.Commands do
   - `true` -> Start initialization on next bus connect function to downstream
     bus.
   """
-  @spec bus_init?(pid) :: boolean
-  def bus_init?(pid), do: read_bit_as_boolean(pid, :control, 3)
+  @spec bus_init?(bus_address) :: boolean
+  def bus_init?(bus_address), do: read_bit_as_boolean(bus_address, :control, 3)
 
   @doc """
   BUS_INIT
@@ -155,8 +167,8 @@ defmodule PCA9641.Commands do
   - `true` -> Start initialization on next bus connect function to downstream
     bus.
   """
-  @spec bus_init(pid, boolean) :: :ok | {:error, term}
-  def bus_init(pid, value), do: write_bit_as_boolean(pid, :control, 3, value)
+  @spec bus_init(bus_address, boolean) :: :ok | {:error, term}
+  def bus_init(bus_address, value), do: write_bit_as_boolean(bus_address, :control, 3, value)
 
   @doc """
   BUS_CONNECT
@@ -167,8 +179,8 @@ defmodule PCA9641.Commands do
   - `false` -> Do not connect I2C-bus from master to downstream bus.
   - `true` -> Connect downstream bus; the internal switch is closed only if LOCK_GRANT = 1.
   """
-  @spec bus_connect?(pid) :: boolean
-  def bus_connect?(pid), do: read_bit_as_boolean(pid, :control, 2)
+  @spec bus_connect?(bus_address) :: boolean
+  def bus_connect?(bus_address), do: read_bit_as_boolean(bus_address, :control, 2)
 
   @doc """
   BUS_CONNECT
@@ -179,8 +191,8 @@ defmodule PCA9641.Commands do
   - `false` -> Do not connect I2C-bus from master to downstream bus.
   - `true` -> Connect downstream bus; the internal switch is closed only if LOCK_GRANT = 1.
   """
-  @spec bus_connect(pid, boolean) :: :ok | {:error, term}
-  def bus_connect(pid, value), do: write_bit_as_boolean(pid, :control, 2, value)
+  @spec bus_connect(bus_address, boolean) :: :ok | {:error, term}
+  def bus_connect(bus_address, value), do: write_bit_as_boolean(bus_address, :control, 2, value)
 
   @doc """
   LOCK_GRANT
@@ -193,8 +205,8 @@ defmodule PCA9641.Commands do
   - `false` -> This master does not have a lock on the downstream bus.
   - `true` -> This master has a lock on the downstream bus.
   """
-  @spec lock_grant?(pid) :: boolean
-  def lock_grant?(pid), do: read_bit_as_boolean(pid, :control, 1)
+  @spec lock_grant?(bus_address) :: boolean
+  def lock_grant?(bus_address), do: read_bit_as_boolean(bus_address, :control, 1)
 
   @doc """
   LOCK_REQ
@@ -209,8 +221,8 @@ defmodule PCA9641.Commands do
     up the lock if master had a lock on the downstream bus.
   - `true` -> Master is requesting a lock on the downstream bus.
   """
-  @spec lock_request?(pid) :: boolean
-  def lock_request?(pid), do: read_bit_as_boolean(pid, :control, 0)
+  @spec lock_request?(bus_address) :: boolean
+  def lock_request?(bus_address), do: read_bit_as_boolean(bus_address, :control, 0)
 
   @doc """
   LOCK_REQ
@@ -225,8 +237,8 @@ defmodule PCA9641.Commands do
     up the lock if master had a lock on the downstream bus.
   - `true` -> Master is requesting a lock on the downstream bus.
   """
-  @spec lock_request(pid, boolean) :: :ok | {:error, term}
-  def lock_request(pid, value), do: write_bit_as_boolean(pid, :control, 0, value)
+  @spec lock_request(bus_address, boolean) :: :ok | {:error, term}
+  def lock_request(bus_address, value), do: write_bit_as_boolean(bus_address, :control, 0, value)
 
   @doc """
   SDA_IO
@@ -243,8 +255,8 @@ defmodule PCA9641.Commands do
   - `true` -> When read, indicates the SDA pin of the downstream bus is HIGH.
     When written, PCA9641 drives SDA pin of the downstream bus HIGH.
   """
-  @spec sda_becomes_io?(pid) :: boolean
-  def sda_becomes_io?(pid), do: read_bit_as_boolean(pid, :status, 7)
+  @spec sda_becomes_io?(bus_address) :: boolean
+  def sda_becomes_io?(bus_address), do: read_bit_as_boolean(bus_address, :status, 7)
 
   @doc """
   SDA_IO
@@ -261,8 +273,8 @@ defmodule PCA9641.Commands do
   - `true` -> When read, indicates the SDA pin of the downstream bus is HIGH.
     When written, PCA9641 drives SDA pin of the downstream bus HIGH.
   """
-  @spec sda_becomes_io(pid, boolean) :: :ok | {:error, term}
-  def sda_becomes_io(pid, value), do: write_bit_as_boolean(pid, :status, 7, value)
+  @spec sda_becomes_io(bus_address, boolean) :: :ok | {:error, term}
+  def sda_becomes_io(bus_address, value), do: write_bit_as_boolean(bus_address, :status, 7, value)
 
   @doc """
   SCL_IO
@@ -279,8 +291,8 @@ defmodule PCA9641.Commands do
   - `true` -> When read, shows the SCL pin of the downstream bus is HIGH. When
     written, PCA9641 drives SCL pin of the downstream bus HIGH.
   """
-  @spec scl_becomes_io?(pid) :: boolean
-  def scl_becomes_io?(pid), do: read_bit_as_boolean(pid, :status, 6)
+  @spec scl_becomes_io?(bus_address) :: boolean
+  def scl_becomes_io?(bus_address), do: read_bit_as_boolean(bus_address, :status, 6)
 
   @doc """
   SCL_IO
@@ -297,8 +309,8 @@ defmodule PCA9641.Commands do
   - `true` -> When read, shows the SCL pin of the downstream bus is HIGH. When
     written, PCA9641 drives SCL pin of the downstream bus HIGH.
   """
-  @spec scl_becomes_io(pid, boolean) :: :ok | {:error, term}
-  def scl_becomes_io(pid, value), do: write_bit_as_boolean(pid, :status, 6, value)
+  @spec scl_becomes_io(bus_address, boolean) :: :ok | {:error, term}
+  def scl_becomes_io(bus_address, value), do: write_bit_as_boolean(bus_address, :status, 6, value)
 
   @doc """
   TEST_INT
@@ -313,8 +325,9 @@ defmodule PCA9641.Commands do
     Interrupt Mask register. Allows this master to invoke its Interrupt Service
     Routine to handle housekeeping tasks.
   """
-  @spec test_interrupt_pin(pid, boolean) :: :ok | {:error, term}
-  def test_interrupt_pin(pid, value), do: write_bit_as_boolean(pid, :status, 5, value)
+  @spec test_interrupt_pin(bus_address, boolean) :: :ok | {:error, term}
+  def test_interrupt_pin(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :status, 5, value)
 
   @doc """
   MBOX_FULL
@@ -326,8 +339,8 @@ defmodule PCA9641.Commands do
   - `false` -> No data is available for *this* master.
   - `true` -> Mailbox contains data for *this* master from the other master.
   """
-  @spec mailbox_full?(pid) :: boolean
-  def mailbox_full?(pid), do: read_bit_as_boolean(pid, :status, 4)
+  @spec mailbox_full?(bus_address) :: boolean
+  def mailbox_full?(bus_address), do: read_bit_as_boolean(bus_address, :status, 4)
 
   @doc """
   MBOX_EMPTY
@@ -342,8 +355,8 @@ defmodule PCA9641.Commands do
   - `true` -> *Other* master mailbox is empty. *Other* master has read previous
     data and it is permitted to write new data.
   """
-  @spec mailbox_empty?(pid) :: boolean
-  def mailbox_empty?(pid), do: read_bit_as_boolean(pid, :status, 3)
+  @spec mailbox_empty?(bus_address) :: boolean
+  def mailbox_empty?(bus_address), do: read_bit_as_boolean(bus_address, :status, 3)
 
   @doc """
   BUS_HUNG
@@ -357,8 +370,8 @@ defmodule PCA9641.Commands do
   - `true` -> Downstream bus hung; when SDA signal is LOW and SCL signal does
     not toggle for more than 500 ms or SCL is LOW for 500 ms.
   """
-  @spec bus_hung?(pid) :: boolean
-  def bus_hung?(pid), do: read_bit_as_boolean(pid, :status, 2)
+  @spec bus_hung?(bus_address) :: boolean
+  def bus_hung?(bus_address), do: read_bit_as_boolean(bus_address, :status, 2)
 
   @doc """
   BUS_INIT_FAIL
@@ -372,8 +385,8 @@ defmodule PCA9641.Commands do
   - `true` -> Bus initialization has failed. SDA still LOW, the downstream bus
     cannot recover.
   """
-  @spec bus_initialisation_failed?(pid) :: boolean
-  def bus_initialisation_failed?(pid), do: read_bit_as_boolean(pid, :status, 1)
+  @spec bus_initialisation_failed?(bus_address) :: boolean
+  def bus_initialisation_failed?(bus_address), do: read_bit_as_boolean(bus_address, :status, 1)
 
   @doc """
   OTHER_LOCK
@@ -386,8 +399,8 @@ defmodule PCA9641.Commands do
   - `false` -> The other master does not have a lock on the downstream bus.
   - `true` -> The other master has a lock on the downstream bus.
   """
-  @spec other_lock?(pid) :: boolean
-  def other_lock?(pid), do: read_bit_as_boolean(pid, :status, 0)
+  @spec other_lock?(bus_address) :: boolean
+  def other_lock?(bus_address), do: read_bit_as_boolean(bus_address, :status, 0)
 
   @doc """
   RES_TIME
@@ -397,9 +410,9 @@ defmodule PCA9641.Commands do
   Returns `{:ok, n}` where `n` is the number if milliseconds remaining in the
   reservation.
   """
-  @spec reserve_time(pid) :: {:ok, non_neg_integer} | {:error, term}
-  def reserve_time(pid) do
-    <<ms>> = Registers.reserve_time(pid)
+  @spec reserve_time(bus_address) :: {:ok, non_neg_integer} | {:error, term}
+  def reserve_time(bus_address) do
+    <<ms>> = Registers.reserve_time(bus_address)
     {:ok, ms}
   end
 
@@ -410,25 +423,11 @@ defmodule PCA9641.Commands do
 
   `ms` is the number of milliseconds remaining in the reservation.
   """
-  @spec reserve_time(pid) :: {:ok, non_neg_integer} | {:error, term}
-  def reserve_time(pid, ms) when is_integer(ms) and ms >= 0 and ms <= 0xFF,
-    do: Registers.reserve_time(pid, ms)
+  @spec reserve_time(bus_address) :: {:ok, non_neg_integer} | {:error, term}
+  def reserve_time(bus_address, ms) when is_integer(ms) and ms >= 0 and ms <= 0xFF,
+    do: Registers.reserve_time(bus_address, ms)
 
-  def reserve_time(_pid, _ms), do: {:error, "Invalid milliseconds value"}
-
-  @doc """
-  BUS_HUNG_INT
-
-  Indicates to both masters that SDA signal is LOW and SCL signal does not
-  toggle for more than 500 ms or SCL is LOW for 500 ms.
-
-  - `false` -> No interrupt generated; normal operation.
-  - `true` -> Interrupt generated; downstream bus cannot recover; when SDA
-    signal is LOW and SCL signal does not toggle for more than 500 ms or SCL is
-    LOW for 500 ms,
-  """
-  @spec bus_hung_interrupt?(pid) :: boolean
-  def bus_hung_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 6)
+  def reserve_time(_bus_address, _ms), do: {:error, "Invalid milliseconds value"}
 
   @doc """
   BUS_HUNG_INT
@@ -441,8 +440,23 @@ defmodule PCA9641.Commands do
     signal is LOW and SCL signal does not toggle for more than 500 ms or SCL is
     LOW for 500 ms,
   """
-  @spec bus_hung_interrupt(pid, boolean) :: :ok | {:error, term}
-  def bus_hung_interrupt(pid, value), do: write_bit_as_boolean(pid, :interrupt_status, 6, value)
+  @spec bus_hung_interrupt?(bus_address) :: boolean
+  def bus_hung_interrupt?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_status, 6)
+
+  @doc """
+  BUS_HUNG_INT
+
+  Indicates to both masters that SDA signal is LOW and SCL signal does not
+  toggle for more than 500 ms or SCL is LOW for 500 ms.
+
+  - `false` -> No interrupt generated; normal operation.
+  - `true` -> Interrupt generated; downstream bus cannot recover; when SDA
+    signal is LOW and SCL signal does not toggle for more than 500 ms or SCL is
+    LOW for 500 ms,
+  """
+  @spec bus_hung_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def bus_hung_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 6, value)
 
   @doc """
   MBOX_FULL_INT
@@ -452,8 +466,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt generated; mailbox is not full.
   - `true` -> Interrupt generated; mailbox full.
   """
-  @spec mailbox_full_interrupt?(pid) :: boolean
-  def mailbox_full_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 5)
+  @spec mailbox_full_interrupt?(bus_address) :: boolean
+  def mailbox_full_interrupt?(bus_address),
+    do: read_bit_as_boolean(bus_address, :interrupt_status, 5)
 
   @doc """
   MBOX_FULL_INT
@@ -463,9 +478,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt generated; mailbox is not full.
   - `true` -> Interrupt generated; mailbox full.
   """
-  @spec mailbox_full_interrupt(pid, boolean) :: :ok | {:error, term}
-  def mailbox_full_interrupt(pid, value),
-    do: write_bit_as_boolean(pid, :interrupt_status, 5, value)
+  @spec mailbox_full_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def mailbox_full_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 5, value)
 
   @doc """
   MBOX_EMPTY_INT
@@ -475,8 +490,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt generated; sent mail is not empty.
   - `true` -> Interrupt generated; mailbox is empty.
   """
-  @spec mailbox_empty_interrupt?(pid) :: boolean
-  def mailbox_empty_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 4)
+  @spec mailbox_empty_interrupt?(bus_address) :: boolean
+  def mailbox_empty_interrupt?(bus_address),
+    do: read_bit_as_boolean(bus_address, :interrupt_status, 4)
 
   @doc """
   MBOX_EMPTY_INT
@@ -486,9 +502,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt generated; sent mail is not empty.
   - `true` -> Interrupt generated; mailbox is empty.
   """
-  @spec mailbox_empty_interrupt(pid, boolean) :: :ok | {:error, term}
-  def mailbox_empty_interrupt(pid, value),
-    do: write_bit_as_boolean(pid, :interrupt_status, 4, value)
+  @spec mailbox_empty_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def mailbox_empty_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 4, value)
 
   @doc """
   TEST_INT_INT
@@ -500,8 +516,9 @@ defmodule PCA9641.Commands do
   - `true` -> Interrupt generated; master activates its interrupt pin via the
     TEST_INT bit in STATUS register.
   """
-  @spec test_interrupt_pin_interrupt?(pid) :: boolean
-  def test_interrupt_pin_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 3)
+  @spec test_interrupt_pin_interrupt?(bus_address) :: boolean
+  def test_interrupt_pin_interrupt?(bus_address),
+    do: read_bit_as_boolean(bus_address, :interrupt_status, 3)
 
   @doc """
   TEST_INT_INT
@@ -513,9 +530,9 @@ defmodule PCA9641.Commands do
   - `true` -> Interrupt generated; master activates its interrupt pin via the
     TEST_INT bit in STATUS register.
   """
-  @spec test_interrupt_pin_interrupt(pid, true) :: :ok | {:error, term}
-  def test_interrupt_pin_interrupt(pid, value),
-    do: write_bit_as_boolean(pid, :interrupt_status, 2, value)
+  @spec test_interrupt_pin_interrupt(bus_address, true) :: :ok | {:error, term}
+  def test_interrupt_pin_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 2, value)
 
   @doc """
   LOCK_GRANT_INT
@@ -526,8 +543,9 @@ defmodule PCA9641.Commands do
     downstream bus.
   - `true` -> Interrupt generated; this master has a lock on the downstream bus.
   """
-  @spec lock_grant_interrupt?(pid) :: boolean
-  def lock_grant_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 2)
+  @spec lock_grant_interrupt?(bus_address) :: boolean
+  def lock_grant_interrupt?(bus_address),
+    do: read_bit_as_boolean(bus_address, :interrupt_status, 2)
 
   @doc """
   LOCK_GRANT_INT
@@ -538,8 +556,9 @@ defmodule PCA9641.Commands do
     downstream bus.
   - `true` -> Interrupt generated; this master has a lock on the downstream bus.
   """
-  @spec lock_grant_interrupt(pid, boolean) :: :ok | {:error, term}
-  def lock_grant_interrupt(pid, value), do: write_bit_as_boolean(pid, :interrupt_status, 2, value)
+  @spec lock_grant_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def lock_grant_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 2, value)
 
   @doc """
   BUS_LOST_INT
@@ -552,8 +571,8 @@ defmodule PCA9641.Commands do
   - `true` -> Interrupt generated; this master has involuntarily lost the
     control of the downstream bus.
   """
-  @spec bus_lost_interrupt?(pid) :: boolean
-  def bus_lost_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 1)
+  @spec bus_lost_interrupt?(bus_address) :: boolean
+  def bus_lost_interrupt?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_status, 1)
 
   @doc """
   BUS_LOST_INT
@@ -566,8 +585,9 @@ defmodule PCA9641.Commands do
   - `true` -> Interrupt generated; this master has involuntarily lost the
     control of the downstream bus.
   """
-  @spec bus_lost_interrupt(pid, boolean) :: :ok | {:error, term}
-  def bus_lost_interrupt(pid, value), do: write_bit_as_boolean(pid, :interrupt_status, 1, value)
+  @spec bus_lost_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def bus_lost_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 1, value)
 
   @doc """
   INT_IN_INT
@@ -578,8 +598,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt on interrupt input pin INT_IN.
   - `true` -> Interrupt on interrupt input pin INT_IN.
   """
-  @spec interupt_in_interrupt?(pid) :: boolean
-  def interupt_in_interrupt?(pid), do: read_bit_as_boolean(pid, :interrupt_status, 0)
+  @spec interupt_in_interrupt?(bus_address) :: boolean
+  def interupt_in_interrupt?(bus_address),
+    do: read_bit_as_boolean(bus_address, :interrupt_status, 0)
 
   @doc """
   INT_IN_INT
@@ -590,9 +611,9 @@ defmodule PCA9641.Commands do
   - `false` -> No interrupt on interrupt input pin INT_IN.
   - `true` -> Interrupt on interrupt input pin INT_IN.
   """
-  @spec interupt_in_interrupt(pid, boolean) :: :ok | {:error, term}
-  def interupt_in_interrupt(pid, value),
-    do: write_bit_as_boolean(pid, :interrupt_status, 0, value)
+  @spec interupt_in_interrupt(bus_address, boolean) :: :ok | {:error, term}
+  def interupt_in_interrupt(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_status, 0, value)
 
   @doc """
   BUS_HUNG_MSK
@@ -600,8 +621,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when BUS_HUNG function is set.
   - `true` -> Disable output interrupt when BUS_HUNG function is set.
   """
-  @spec bus_hung_mask?(pid) :: boolean
-  def bus_hung_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 6)
+  @spec bus_hung_mask?(bus_address) :: boolean
+  def bus_hung_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 6)
 
   @doc """
   MBOX_FULL_MSK
@@ -609,8 +630,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when MBOX_FULL function is set.
   - `true` -> Disable output interrupt when MBOX_FULL function is set.
   """
-  @spec mailbox_full_mask?(pid) :: boolean
-  def mailbox_full_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 5)
+  @spec mailbox_full_mask?(bus_address) :: boolean
+  def mailbox_full_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 5)
 
   @doc """
   MBOX_FULL_MSK
@@ -618,8 +639,9 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when MBOX_FULL function is set.
   - `true` -> Disable output interrupt when MBOX_FULL function is set.
   """
-  @spec mailbox_full_mask(pid, boolean) :: :ok | {:error, term}
-  def mailbox_full_mask(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 5, value)
+  @spec mailbox_full_mask(bus_address, boolean) :: :ok | {:error, term}
+  def mailbox_full_mask(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 5, value)
 
   @doc """
   MBOX_EMPTY_MSK
@@ -627,8 +649,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when MBOX_EMPTY function is set.
   - `true` -> Disable output interrupt when MBOX_EMPTY function is set.
   """
-  @spec mailbox_empty_mask?(pid) :: boolean
-  def mailbox_empty_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 4)
+  @spec mailbox_empty_mask?(bus_address) :: boolean
+  def mailbox_empty_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 4)
 
   @doc """
   MBOX_EMPTY_MSK
@@ -636,8 +658,9 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when MBOX_EMPTY function is set.
   - `true` -> Disable output interrupt when MBOX_EMPTY function is set.
   """
-  @spec mailbox_empty_mask(pid, boolean) :: :ok | {:error, term}
-  def mailbox_empty_mask(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 4, value)
+  @spec mailbox_empty_mask(bus_address, boolean) :: :ok | {:error, term}
+  def mailbox_empty_mask(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 4, value)
 
   @doc """
   TEST_INT_MSK
@@ -645,8 +668,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when TEST_INT function is set.
   - `true` -> Disable output interrupt when TEST_INT function is set.
   """
-  @spec test_interrupt_mask?(pid) :: boolean
-  def test_interrupt_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 3)
+  @spec test_interrupt_mask?(bus_address) :: boolean
+  def test_interrupt_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 3)
 
   @doc """
   TEST_INT_MSK
@@ -654,8 +677,9 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when TEST_INT function is set.
   - `true` -> Disable output interrupt when TEST_INT function is set.
   """
-  @spec test_interrupt_mask?(pid, boolean) :: :ok | {:error, term}
-  def test_interrupt_mask?(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 3, value)
+  @spec test_interrupt_mask?(bus_address, boolean) :: :ok | {:error, term}
+  def test_interrupt_mask?(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 3, value)
 
   @doc """
   LOCK_GRANT_MSK
@@ -663,8 +687,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when LOCK_GRANT function is set.
   - `true` -> Disable output interrupt when LOCK_GRANT function is set.
   """
-  @spec lock_grant_mask?(pid) :: boolean
-  def lock_grant_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 2)
+  @spec lock_grant_mask?(bus_address) :: boolean
+  def lock_grant_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 2)
 
   @doc """
   LOCK_GRANT_MSK
@@ -672,8 +696,9 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when LOCK_GRANT function is set.
   - `true` -> Disable output interrupt when LOCK_GRANT function is set.
   """
-  @spec lock_grant_mask(pid, boolean) :: :ok | {:error, term}
-  def lock_grant_mask(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 2, value)
+  @spec lock_grant_mask(bus_address, boolean) :: :ok | {:error, term}
+  def lock_grant_mask(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 2, value)
 
   @doc """
   BUS_LOST_MSK
@@ -681,8 +706,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when BUS_LOST function is set.
   - `true` -> Disable output interrupt when BUS_LOST function is set.
   """
-  @spec bus_lost_mask?(pid) :: boolean
-  def bus_lost_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 1)
+  @spec bus_lost_mask?(bus_address) :: boolean
+  def bus_lost_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 1)
 
   @doc """
   BUS_LOST_MSK
@@ -690,8 +715,9 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when BUS_LOST function is set.
   - `true` -> Disable output interrupt when BUS_LOST function is set.
   """
-  @spec bus_lost_mask(pid, boolean) :: :ok | {:error, term}
-  def bus_lost_mask(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 1, value)
+  @spec bus_lost_mask(bus_address, boolean) :: :ok | {:error, term}
+  def bus_lost_mask(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 1, value)
 
   @doc """
   INT_IN_MSK
@@ -699,8 +725,8 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when INT_IN function is set.
   - `true` -> Disable output interrupt when INT_IN function is set.
   """
-  @spec int_in_mask?(pid) :: boolean
-  def int_in_mask?(pid), do: read_bit_as_boolean(pid, :interrupt_mask, 0)
+  @spec int_in_mask?(bus_address) :: boolean
+  def int_in_mask?(bus_address), do: read_bit_as_boolean(bus_address, :interrupt_mask, 0)
 
   @doc """
   INT_IN_MSK
@@ -708,44 +734,45 @@ defmodule PCA9641.Commands do
   - `false` -> Enable output interrupt when INT_IN function is set.
   - `true` -> Disable output interrupt when INT_IN function is set.
   """
-  @spec int_in_mask(pid, boolean) :: :ok | {:error, term}
-  def int_in_mask(pid, value), do: write_bit_as_boolean(pid, :interrupt_mask, 0, value)
+  @spec int_in_mask(bus_address, boolean) :: :ok | {:error, term}
+  def int_in_mask(bus_address, value),
+    do: write_bit_as_boolean(bus_address, :interrupt_mask, 0, value)
 
   @doc """
   Read shared mailbox.
   """
-  @spec read_mailbox(pid) :: {:ok, binary} | {:error, term}
-  def read_mailbox(pid), do: Registers.mailbox(pid)
+  @spec read_mailbox(bus_address) :: {:ok, binary} | {:error, term}
+  def read_mailbox(bus_address), do: Registers.mailbox(bus_address)
 
   @doc """
   Write shared mailbox.
   """
-  @spec write_mailbox(pid, binary) :: :ok | {:error, term}
-  def write_mailbox(pid, message), do: Registers.mailbox(pid, message)
+  @spec write_mailbox(bus_address, binary) :: :ok | {:error, term}
+  def write_mailbox(bus_address, message), do: Registers.mailbox(bus_address, message)
 
   @doc """
   Request access to downstream bus.
 
   Requests access to the downstream bus and blocks until given access.
   """
-  @spec request_downstream_bus(pid) :: :ok | {:error, term}
-  def request_downstream_bus(pid), do: request_downstream_bus(pid, 0)
+  @spec request_downstream_bus(bus_address) :: :ok | {:error, term}
+  def request_downstream_bus(bus_address), do: request_downstream_bus(bus_address, 0)
 
   @doc """
   Request access to downstream bus.
 
   Requests access to the downstream bus and blocks until given access.
   """
-  @spec request_downstream_bus(pid, non_neg_integer) :: :ok | {:error, term}
-  def request_downstream_bus(pid, reserve_time)
+  @spec request_downstream_bus(bus_address, non_neg_integer) :: :ok | {:error, term}
+  def request_downstream_bus(bus_address, reserve_time)
       when is_integer(reserve_time) and reserve_time >= 0 and reserve_time <= 0xFF do
-    with :ok <- Registers.reserve_time(pid, reserve_time),
+    with :ok <- Registers.reserve_time(bus_address, reserve_time),
          # Request the bus lock.
-         :ok <- Registers.control(pid, 0x1),
-         :ok <- block_until_lock_granted(pid),
+         :ok <- Registers.control(bus_address, 0x1),
+         :ok <- block_until_lock_granted(bus_address),
          # Connect the downstream bus.
-         :ok <- Registers.control(pid, 0x5),
-         true <- bus_connect?(pid) do
+         :ok <- Registers.control(bus_address, 0x5),
+         true <- bus_connect?(bus_address) do
       :ok
     end
   end
@@ -753,46 +780,46 @@ defmodule PCA9641.Commands do
   @doc """
   Abandon access to the downstream bus.
   """
-  @spec abandon_downstream_bus(pid) :: :ok | {:error, term}
-  def abandon_downstream_bus(pid), do: Registers.control(pid, 0)
+  @spec abandon_downstream_bus(bus_address) :: :ok | {:error, term}
+  def abandon_downstream_bus(bus_address), do: Registers.control(bus_address, 0)
 
-  defp block_until_lock_granted(pid) do
-    if lock_grant?(pid) do
+  defp block_until_lock_granted(bus_address) do
+    if lock_grant?(bus_address) do
       :ok
     else
       :timer.sleep(5)
-      block_until_lock_granted(pid)
+      block_until_lock_granted(bus_address)
     end
   end
 
-  defp read_bit_as_boolean(pid, register, bit)
-       when is_pid(pid) and is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
+  defp read_bit_as_boolean(bus_address, register, bit)
+       when is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
     value =
       Registers
-      |> apply(register, [pid])
+      |> apply(register, [bus_address])
       |> get_bit(bit)
 
     value == 1
   end
 
-  defp write_bit_as_boolean(pid, register, bit, true)
-       when is_pid(pid) and is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
+  defp write_bit_as_boolean(bus_address, register, bit, true)
+       when is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
     value =
       Registers
-      |> apply(register, [pid])
+      |> apply(register, [bus_address])
       |> set_bit(bit)
 
-    apply(Registers, register, [pid, value])
+    apply(Registers, register, [bus_address, value])
   end
 
-  defp write_bit_as_boolean(pid, register, bit, false)
-       when is_pid(pid) and is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
+  defp write_bit_as_boolean(bus_address, register, bit, false)
+       when is_atom(register) and is_integer(bit) and bit >= 0 and bit < 8 do
     value =
       Registers
-      |> apply(register, [pid])
+      |> apply(register, [bus_address])
       |> clear_bit(bit)
 
-    apply(Registers, register, [pid, value])
+    apply(Registers, register, [bus_address, value])
   end
 
   defp get_bit(<<byte>>, bit), do: byte >>> bit &&& 1

@@ -4,7 +4,7 @@ defmodule PCA9641.MixProject do
   def project do
     [
       app: :pca9641,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       description: "Driver for PCA9641 2-channel I2C bus master arbiter chip",
@@ -34,7 +34,7 @@ defmodule PCA9641.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:elixir_ale, "~> 1.2"},
+      {:circuits_i2c, "~> 0.3"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
