@@ -8,6 +8,9 @@ defmodule PCA9641.Commands do
   the device.
   """
 
+  @type interrupt_reason ::
+          :bus_hung | :mbox_full | :mbox_empty | :test_int | :lock_grant | :bus_lost | :int_in
+
   @doc false
   def start_link(bus, address), do: I2C.start_link(bus, address)
 
@@ -415,6 +418,29 @@ defmodule PCA9641.Commands do
     do: Registers.reserve_time(pid, ms)
 
   def reserve_time(_pid, _ms), do: {:error, "Invalid milliseconds value"}
+
+  @doc """
+  Indicates the reasons for which an interrupt was generated (if any).
+  """
+  @spec interrupt_reason(pid) :: [interrupt_reason()]
+  def interrupt_reason(pid) do
+    value = Registers.interrupt_status(pid)
+
+    %{
+      bus_hung: 6,
+      mbox_full: 5,
+      mbox_empty: 4,
+      test_int: 3,
+      lock_grant: 2,
+      bus_lost: 1,
+      int_in: 0
+    }
+    |> Enum.reduce([], fn {name, idx}, interrupts ->
+      if get_bit(value, idx),
+        do: [name | interrupts],
+        else: interrupts
+    end)
+  end
 
   @doc """
   BUS_HUNG_INT
