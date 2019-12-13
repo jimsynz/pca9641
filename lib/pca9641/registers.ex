@@ -22,9 +22,10 @@ defmodule PCA9641.Registers do
   def control(pid, byte), do: write_register(pid, 1, byte)
 
   @doc """
-  Register 2: Status. 1 byte. RO.
+  Register 2: Status. 1 byte. RW.
   """
   def status(pid), do: read_register(pid, 2)
+  def status(pid, byte), do: write_register(pid, 2, byte)
 
   @doc """
   Register 3: Reserve Time. 1 byte. RW.
