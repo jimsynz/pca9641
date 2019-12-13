@@ -8,7 +8,17 @@ defmodule PCA9641.Commands do
   the device.
   """
 
-  @type interrupt_reason ::
+  @interrupts %{
+    bus_hung: 6,
+    mbox_full: 5,
+    mbox_empty: 4,
+    test_int: 3,
+    lock_grant: 2,
+    bus_lost: 1,
+    int_in: 0
+  }
+
+  @type interrupt_name ::
           :bus_hung | :mbox_full | :mbox_empty | :test_int | :lock_grant | :bus_lost | :int_in
 
   @doc false
@@ -422,19 +432,11 @@ defmodule PCA9641.Commands do
   @doc """
   Indicates the reasons for which an interrupt was generated (if any).
   """
-  @spec interrupt_reason(pid) :: [interrupt_reason()]
-  def interrupt_reason(pid) do
+  @spec interrupt_name(pid) :: [interrupt_name()]
+  def interrupt_name(pid) do
     value = Registers.interrupt_status(pid)
 
-    %{
-      bus_hung: 6,
-      mbox_full: 5,
-      mbox_empty: 4,
-      test_int: 3,
-      lock_grant: 2,
-      bus_lost: 1,
-      int_in: 0
-    }
+    @interrupts
     |> Enum.reduce([], fn {name, idx}, interrupts ->
       if get_bit(value, idx) == 1,
         do: [name | interrupts],
@@ -448,6 +450,26 @@ defmodule PCA9641.Commands do
   @spec interrupt_clear(pid) :: :ok | {:error, term}
   def interrupt_clear(pid) do
     Registers.interrupt_status(pid, 0x7F)
+  end
+
+  @doc """
+  Enable the specified interrupts.
+  """
+  @spec interrupt_enable(pid, :all | [interrupt_name()]) :: :ok | {:error, term}
+  def interrupt_enable(pid, :all) do
+    Registers.interrupt_mask(pid, 0x7F)
+  end
+
+  def interrupt_enable(pid, interrupts \\ []) do
+    mask =
+      @interrupts
+      |> Enum.reduce(0, fn {name, idx}, result ->
+        if Enum.contain?(interrupts, name),
+          do: set_bit(result, idx),
+          else: result
+      end)
+
+    Registers.interrupt_mask(pid, mask)
   end
 
   @doc """
