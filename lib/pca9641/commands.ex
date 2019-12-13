@@ -443,6 +443,14 @@ defmodule PCA9641.Commands do
   end
 
   @doc """
+  Clears the interrupt status register.
+  """
+  @spec interrupt_clear(pid) :: :ok | {:error, term}
+  def interrupt_clear(pid) do
+    Registers.interrupt_status(pid, 0x7F)
+  end
+
+  @doc """
   BUS_HUNG_INT
 
   Indicates to both masters that SDA signal is LOW and SCL signal does not
