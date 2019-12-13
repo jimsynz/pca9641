@@ -432,8 +432,8 @@ defmodule PCA9641.Commands do
   @doc """
   Indicates the reasons for which an interrupt was generated (if any).
   """
-  @spec interrupt_name(pid) :: [interrupt_name()]
-  def interrupt_name(pid) do
+  @spec interrupt_reason(pid) :: [interrupt_name()]
+  def interrupt_reason(pid) do
     value = Registers.interrupt_status(pid)
 
     @interrupts
@@ -456,16 +456,16 @@ defmodule PCA9641.Commands do
   Enable the specified interrupts.
   """
   @spec interrupt_enable(pid, :all | [interrupt_name()]) :: :ok | {:error, term}
-  def interrupt_enable(pid, :all) do
-    Registers.interrupt_mask(pid, 0x7F)
-  end
+  def interrupt_enable(pid, :all), do: Registers.interrupt_mask(pid, 0)
 
-  def interrupt_enable(pid, interrupts \\ []) do
+  def interrupt_enable(pid, :none), do: Registers.interrupt_mask(pid, 0x7F)
+
+  def interrupt_enable(pid, interrupts) when is_list(interrupts) do
     mask =
       @interrupts
-      |> Enum.reduce(0, fn {name, idx}, result ->
-        if Enum.contain?(interrupts, name),
-          do: set_bit(result, idx),
+      |> Enum.reduce(0x7F, fn {name, idx}, result ->
+        if Enum.member?(interrupts, name),
+          do: clear_bit(result, idx),
           else: result
       end)
 
@@ -852,8 +852,11 @@ defmodule PCA9641.Commands do
   end
 
   defp get_bit(<<byte>>, bit), do: byte >>> bit &&& 1
+  defp set_bit(<<byte>>, bit), do: set_bit(byte, bit, 1)
   defp set_bit(byte, bit), do: set_bit(byte, bit, 1)
-  defp set_bit(<<byte>>, bit, 1), do: byte ||| 1 <<< bit
+  defp set_bit(<<byte>>, bit, 1), do: set_bit(byte, bit, 1)
+  defp set_bit(<<byte>>, bit, 0), do: set_bit(byte, bit, 0)
+  defp set_bit(byte, bit, 1), do: byte ||| 1 <<< bit
   defp set_bit(byte, bit, 0), do: clear_bit(byte, bit)
   defp clear_bit(<<byte>>, bit), do: byte ||| ~~~(1 <<< bit)
 end

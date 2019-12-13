@@ -51,12 +51,16 @@ defmodule PCA9641.Registers do
   def mailbox(pid) do
     lsb = read_register(pid, 6)
     msb = read_register(pid, 7)
-    (msb <<< 8) + lsb
+    <<msb, lsb>>
   end
 
-  def mailbox(pid, message) do
+  def mailbox(pid, message) when is_integer(message) do
     msb = message >>> 8 &&& 0xFF
     lsb = message &&& 0xFF
+    with :ok <- write_register(pid, 6, lsb), :ok <- write_register(pid, 7, msb), do: :ok
+  end
+
+  def mailbox(pid, <<msb::integer-size(8), lsb::integer-size(8)>>) do
     with :ok <- write_register(pid, 6, lsb), :ok <- write_register(pid, 7, msb), do: :ok
   end
 
