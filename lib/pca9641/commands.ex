@@ -436,7 +436,7 @@ defmodule PCA9641.Commands do
       int_in: 0
     }
     |> Enum.reduce([], fn {name, idx}, interrupts ->
-      if get_bit(value, idx),
+      if get_bit(value, idx) == 1,
         do: [name | interrupts],
         else: interrupts
     end)
