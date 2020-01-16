@@ -34,8 +34,8 @@ defmodule PCA9641Test do
   describe "request_downstream_bus/1" do
     test "writes to the control register and then polls until bus init is true" do
       Registers
-      |> expect(:write_control, 1, fn conn, command ->
-        assert command == 0x1
+      |> expect(:update_control, 1, fn conn, callback ->
+        assert <<0b00000001>> = callback.(<<0>>)
         {:ok, conn}
       end)
       |> expect(:read_control, 1, fn _conn ->

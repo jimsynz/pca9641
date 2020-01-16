@@ -133,9 +133,9 @@ defmodule PCA9641 do
   Attempt to acquire the downstream I2C bus.
   """
   @spec request_downstream_bus(t) :: {:ok, t} | {:error, reason :: any}
-  def request_downstream_bus(%PCA9641{conn: conn} = dev) do
-    with {:ok, conn} <- Registers.write_control(conn, 0x1),
-         {:ok, dev} <- wait_for_bus_init(%{dev | conn: conn}) do
+  def request_downstream_bus(%PCA9641{} = dev) do
+    with {:ok, dev} <- lock_request(dev, true),
+         {:ok, dev} <- wait_for_bus_init(dev) do
       {:ok, dev}
     end
   end
@@ -991,13 +991,20 @@ defmodule PCA9641 do
     with {:ok, conn} <- Registers.write_control(conn, <<0>>), do: {:ok, %{dev | conn: conn}}
   end
 
-  defp wait_for_bus_init(conn), do: wait_for_bus_init(conn, 0)
-  defp wait_for_bus_init(_conn, 10), do: {:error, :bus_init_fail}
+  @doc """
+  Waits for downstream bus initialisation to succeed.
 
-  defp wait_for_bus_init(conn, i) do
+  Waits for a maximum of 1 second.
+  """
+  @spec wait_for_bus_init(t) :: {:ok, t} | {:error, :bus_init_fail}
+  def wait_for_bus_init(conn), do: do_wait_for_bus_init(conn, 0)
+
+  defp do_wait_for_bus_init(_conn, 10), do: {:error, :bus_init_fail}
+
+  defp do_wait_for_bus_init(%PCA9641{} = conn, i) do
     if bus_init?(conn) do
       :timer.sleep(100)
-      wait_for_bus_init(conn, i + 1)
+      do_wait_for_bus_init(conn, i + 1)
     else
       if bus_initialisation_failed?(conn),
         do: {:error, :bus_init_fail},
