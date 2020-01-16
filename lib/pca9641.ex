@@ -53,8 +53,10 @@ defmodule PCA9641 do
   Acquire a connection to the PCA9641 device using the passed in I2C connection.
 
   ## Options:
-    - `conn` (required) an I2C connection, probably from `ElixirALE.I2C` or `Circuits.I2C`.
-    - `int_pin` a (optional) GPIO connection for the interrupt pin.
+    - `conn` (required) an I2C connection, probably from `ElixirALE.I2C` or
+      `Circuits.I2C`.
+    - `int_pin` a (optional) GPIO connection for the interrupt pin  This should
+      be already set to direction `:in`.
   """
   @spec acquire(acquire_options) :: {:ok, t} | {:error, reason :: any}
   @impl Wafer.Conn
@@ -66,6 +68,51 @@ defmodule PCA9641 do
       :error -> {:error, "`PCA9641.acquire/1` requires the `conn` option."}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  @doc """
+  Enable interrupts on the `int_pin`.
+
+  Enables interrupts on the GPIO pin which is connected to the PCA9641 interrupt
+  pin.  The Wafer interrupt message metadata field will contain this PCA9641
+  conn.
+  """
+  @spec interrupt_pin_enable(t) :: {:ok, t} | {:error, reason :: any}
+  def interrupt_pin_enable(%PCA9641{int_pin: nil}), do: {:error, "No interrupt pin specified."}
+
+  def interrupt_pin_enable(%PCA9641{int_pin: conn} = dev) do
+    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :both, dev),
+         do: {:ok, %{dev | int_pin: conn}}
+  end
+
+  @doc """
+  Enable interrupts on the `int_pin`.
+
+  Enables interrupts on the GPIO pin which is connected to the PCA9641 interrupt
+  pin.  The Wafer interrupt message metadata field will contain a two-tuple of
+  this PCA9641 conn and `metadata`.
+  """
+  @spec interrupt_pin_enable(t, metadata :: any) :: {:ok, t} | {:error, reason :: any}
+  def interrupt_pin_enable(%PCA9641{int_pin: nil}, _metadata),
+    do: {:error, "No interrupt pin specified."}
+
+  def interrupt_pin_enable(%PCA9641{int_pin: conn} = dev, metadata) do
+    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :both, {dev, metadata}),
+         do: {:ok, %{dev | int_pin: conn}}
+  end
+
+  @doc """
+  Disable interrupts on the `int_pin`.
+
+  Disables interrupts on the GPIO pin which is connected to the PCA9641
+  interrupt pin.
+  """
+  @spec interrupt_pin_disable(t) :: {:ok, t} | {:error, reason :: any}
+  def interrupt_pin_disable(%PCA9641{int_pin: nil}), do: {:error, "No interrupt pin specified."}
+
+  def interrupt_pin_disable(%PCA9641{int_pin: conn} = dev) do
+    with {:ok, conn} <- Wafer.GPIO.disable_interrupt(conn, :both, dev),
+         do: {:ok, %{dev | int_pin: conn}}
   end
 
   @doc """
