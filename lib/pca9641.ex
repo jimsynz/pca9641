@@ -1,5 +1,5 @@
 defmodule PCA9641 do
-  @derive [Wafer.Chip, Wafer.DeviceID]
+  @derive [Wafer.Chip]
   defstruct ~w[conn int_pin state]a
   @behaviour Wafer.Conn
   alias PCA9641.Registers
@@ -111,7 +111,7 @@ defmodule PCA9641 do
   def interrupt_pin_disable(%PCA9641{int_pin: nil}), do: {:error, "No interrupt pin specified."}
 
   def interrupt_pin_disable(%PCA9641{int_pin: conn} = dev) do
-    with {:ok, conn} <- Wafer.GPIO.disable_interrupt(conn, :both, dev),
+    with {:ok, conn} <- Wafer.GPIO.disable_interrupt(conn, :both),
          do: {:ok, %{dev | int_pin: conn}}
   end
 
