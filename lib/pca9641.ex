@@ -121,9 +121,9 @@ defmodule PCA9641 do
   It should match the expected value of `#{@pca9641_id}`.
   """
   @spec verify_identity(t) :: {:ok, t} | {:error, reason :: any}
-  def verify_identity(%PCA9641{conn: conn}) do
+  def verify_identity(%PCA9641{conn: conn} = dev) do
     case Registers.read_id(conn) do
-      {:ok, <<@pca9641_id>>} -> {:ok, conn}
+      {:ok, <<@pca9641_id>>} -> {:ok, %{dev | conn: conn}}
       {:ok, <<id>>} -> {:error, "Found incorrect ID #{inspect(id)}"}
       {:error, reason} -> {:error, reason}
     end
