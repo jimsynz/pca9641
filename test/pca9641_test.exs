@@ -408,7 +408,7 @@ defmodule PCA9641Test do
     test "sets the contents of the RESERVE_TIME register" do
       Registers
       |> expect(:write_reserve_time, 1, fn conn, ms ->
-        assert ms == 123
+        assert ms == <<123>>
         {:ok, conn}
       end)
 

@@ -402,16 +402,7 @@ defmodule PCA9641 do
   """
   @spec lock_request(t, boolean) :: {:ok, t} | {:error, term}
   def lock_request(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    # with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0, value)),
-    #      do: {:ok, %{dev | conn: conn}}
-
-    with {:ok, conn} <-
-           Registers.update_control(conn, fn data ->
-             Logger.warn("read CONTROL: #{inspect(data)}")
-             data = set_bit(data, 0, value)
-             Logger.warn("write CONTROL: #{inspect(data)}")
-             data
-           end),
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0, value)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -664,7 +655,7 @@ defmodule PCA9641 do
   @spec reserve_time(t) :: {:ok, t} | {:error, term}
   def reserve_time(%PCA9641{conn: conn} = dev, ms)
       when is_integer(ms) and ms >= 0 and ms <= 0xFF do
-    with {:ok, conn} <- Registers.write_reserve_time(conn, ms), do: {:ok, %{dev | conn: conn}}
+    with {:ok, conn} <- Registers.write_reserve_time(conn, <<ms>>), do: {:ok, %{dev | conn: conn}}
   end
 
   def reserve_time(_conn, _ms), do: {:error, "Invalid milliseconds value"}
