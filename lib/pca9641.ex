@@ -5,6 +5,7 @@ defmodule PCA9641 do
   alias PCA9641.Registers
   alias Wafer.Conn
   import Wafer.Twiddles
+  require Logger
 
   @moduledoc """
   PCA9641 Driver for Elixir using Wafer.
@@ -401,7 +402,16 @@ defmodule PCA9641 do
   """
   @spec lock_request(t, boolean) :: {:ok, t} | {:error, term}
   def lock_request(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0, value)),
+    # with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0, value)),
+    #      do: {:ok, %{dev | conn: conn}}
+
+    with {:ok, conn} <-
+           Registers.update_control(conn, fn data ->
+             Logger.warn("read CONTROL: #{inspect(data)}")
+             data = set_bit(data, 0, value)
+             Logger.warn("write CONTROL: #{inspect(data)}")
+             data
+           end),
          do: {:ok, %{dev | conn: conn}}
   end
 
