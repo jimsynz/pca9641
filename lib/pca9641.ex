@@ -44,6 +44,7 @@ defmodule PCA9641 do
           :bus_hung | :mbox_full | :mbox_empty | :test_int | :lock_grant | :bus_lost | :int_in
 
   @type t :: %PCA9641{conn: Conn.t(), int_pin: Conn.t()}
+  @type mailbox_data :: <<_::16>>
   @type acquire_options :: [acquire_option]
   @type acquire_option :: {:conn, Conn.t(), int_pin: Conn.t()}
 
@@ -971,17 +972,21 @@ defmodule PCA9641 do
   @doc """
   Read shared mailbox.
   """
-  @spec read_mailbox(t) :: {:ok, binary, t} | {:error, term}
+  @spec read_mailbox(t) :: {:ok, mailbox_data, t} | {:error, term}
   def read_mailbox(%PCA9641{conn: conn} = dev) do
-    with {:ok, mailbox} <- Registers.read_mailbox(conn), do: {:ok, mailbox, %{dev | conn: conn}}
+    with {:ok, <<lsb>>} <- Registers.read_mailbox_lsb(conn),
+         {:ok, <<msb>>} <- Registers.read_mailbox_msb(conn),
+         do: {:ok, <<msb, lsb>>, %{dev | conn: conn}}
   end
 
   @doc """
   Write shared mailbox.
   """
-  @spec write_mailbox(pid, binary) :: :ok | {:error, term}
-  def write_mailbox(%PCA9641{conn: conn} = dev, data) when byte_size(data) == 2 do
-    with {:ok, conn} <- Registers.write_mailbox(conn, data), do: {:ok, %{dev | conn: conn}}
+  @spec write_mailbox(pid, mailbox_data) :: :ok | {:error, term}
+  def write_mailbox(%PCA9641{conn: conn} = dev, <<msb, lsb>>) do
+    with {:ok, conn} <- Registers.write_mailbox_lsb(conn, <<lsb>>),
+         {:ok, conn} <- Registers.write_mailbox_msb(conn, <<msb>>),
+         do: {:ok, %{dev | conn: conn}}
   end
 
   @doc """

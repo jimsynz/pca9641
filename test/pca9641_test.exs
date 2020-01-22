@@ -892,8 +892,11 @@ defmodule PCA9641Test do
   describe "read_mailbox/1" do
     test "returns the contents of the MAILBOX register" do
       Registers
-      |> expect(:read_mailbox, 1, fn _conn ->
-        {:ok, <<0x1, 0x2>>}
+      |> expect(:read_mailbox_msb, 1, fn _conn ->
+        {:ok, <<0x1>>}
+      end)
+      |> expect(:read_mailbox_lsb, 1, fn _conn ->
+        {:ok, <<0x2>>}
       end)
 
       assert {:ok, <<0x1, 0x2>>, _conn} = PCA9641.read_mailbox(conn())
@@ -903,8 +906,12 @@ defmodule PCA9641Test do
   describe "write_mailbox/2" do
     test "writes the contents of the MAILBOX register" do
       Registers
-      |> expect(:write_mailbox, 1, fn conn, data ->
-        assert <<0x1, 0x2>> == data
+      |> expect(:write_mailbox_msb, 1, fn conn, data ->
+        assert <<0x1>> == data
+        {:ok, conn}
+      end)
+      |> expect(:write_mailbox_lsb, 1, fn conn, data ->
+        assert <<0x2>> == data
         {:ok, conn}
       end)
 

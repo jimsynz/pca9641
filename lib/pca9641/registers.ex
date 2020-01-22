@@ -12,5 +12,6 @@ defmodule PCA9641.Registers do
   defregister(:reserve_time, 0x03, :rw, 1)
   defregister(:interrupt_status, 0x04, :rw, 1)
   defregister(:interrupt_mask, 0x05, :rw, 1)
-  defregister(:mailbox, 0x06, :rw, 2)
+  defregister(:mailbox_lsb, 0x06, :rw, 1)
+  defregister(:mailbox_msb, 0x07, :rw, 1)
 end
