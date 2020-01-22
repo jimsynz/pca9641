@@ -83,7 +83,7 @@ defmodule PCA9641 do
   def interrupt_pin_enable(%PCA9641{int_pin: nil}), do: {:error, "No interrupt pin specified."}
 
   def interrupt_pin_enable(%PCA9641{int_pin: conn} = dev) do
-    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :both, dev),
+    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :falling, dev),
          do: {:ok, %{dev | int_pin: conn}}
   end
 
@@ -99,7 +99,7 @@ defmodule PCA9641 do
     do: {:error, "No interrupt pin specified."}
 
   def interrupt_pin_enable(%PCA9641{int_pin: conn} = dev, metadata) do
-    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :both, {dev, metadata}),
+    with {:ok, conn} <- Wafer.GPIO.enable_interrupt(conn, :falling, {dev, metadata}),
          do: {:ok, %{dev | int_pin: conn}}
   end
 
