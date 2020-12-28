@@ -15,7 +15,7 @@ by adding `pca9641` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:pca9641, "~> 0.1.0"}
+    {:pca9641, "~> 1.0.0"}
   ]
 end
 ```
