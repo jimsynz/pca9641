@@ -136,9 +136,9 @@ defmodule PCA9641 do
   """
   @spec request_downstream_bus(t) :: {:ok, t} | {:error, reason :: any}
   def request_downstream_bus(%PCA9641{} = dev) do
-    with {:ok, dev} <- lock_request(dev, true),
-         {:ok, dev} <- wait_for_bus_init(dev) do
-      {:ok, dev}
+    case lock_request(dev, true) do
+      {:ok, dev} -> wait_for_bus_init(dev)
+      {:error, reason} -> {:error, reason}
     end
   end
 
