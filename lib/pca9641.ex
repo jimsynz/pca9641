@@ -163,8 +163,13 @@ defmodule PCA9641 do
   masters request the downstream bus at the same time.
   """
   @spec priority(t, boolean) :: {:ok, t} | {:error, reason :: any}
-  def priority(%PCA9641{conn: conn} = dev, value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 7, value)),
+  def priority(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 7)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def priority(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 7)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -197,8 +202,13 @@ defmodule PCA9641 do
     disconnected upon detecting an SMBus time-out condition.
   """
   @spec downstream_disconnect_on_timeout(t, boolean) :: {:ok, t} | {:error, term}
-  def downstream_disconnect_on_timeout(%PCA9641{conn: conn} = dev, value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 6, value)),
+  def downstream_disconnect_on_timeout(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 6)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def downstream_disconnect_on_timeout(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 6)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -237,8 +247,13 @@ defmodule PCA9641 do
     ms, the connection between master and downstream bus will be disconnected.
   """
   @spec idle_timer_disconnect(t, boolean) :: {:ok, t} | {:error, term}
-  def idle_timer_disconnect(%{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 5, value)),
+  def idle_timer_disconnect(%{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 5)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def idle_timer_disconnect(%{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 5)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -271,8 +286,13 @@ defmodule PCA9641 do
     general call soft reset from master.
   """
   @spec smbus_software_reset(t, boolean) :: {:ok, t} | {:error, term}
-  def smbus_software_reset(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 4, value)),
+  def smbus_software_reset(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 4)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def smbus_software_reset(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 4)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -311,8 +331,13 @@ defmodule PCA9641 do
     bus.
   """
   @spec bus_init(t, boolean) :: {:ok, t} | {:error, term}
-  def bus_init(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 3, value)),
+  def bus_init(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 3)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def bus_init(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 3)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -343,8 +368,13 @@ defmodule PCA9641 do
   - `true` -> Connect downstream bus; the internal switch is closed only if LOCK_GRANT = 1.
   """
   @spec bus_connect(t, boolean) :: {:ok, t} | {:error, term}
-  def bus_connect(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 2, value)),
+  def bus_connect(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 2)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def bus_connect(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 2)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -402,8 +432,13 @@ defmodule PCA9641 do
   - `true` -> Master is requesting a lock on the downstream bus.
   """
   @spec lock_request(t, boolean) :: {:ok, t} | {:error, term}
-  def lock_request(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0, value)),
+  def lock_request(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_control(conn, &set_bit(&1, 0)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def lock_request(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_control(conn, &clear_bit(&1, 0)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -446,8 +481,13 @@ defmodule PCA9641 do
     When written, PCA9641 drives SDA pin of the downstream bus HIGH.
   """
   @spec sda_becomes_io(t, boolean) :: {:ok, t} | {:error, term}
-  def sda_becomes_io(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 7, value)),
+  def sda_becomes_io(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 7)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def sda_becomes_io(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_status(conn, &clear_bit(&1, 7)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -490,8 +530,13 @@ defmodule PCA9641 do
     written, PCA9641 drives SCL pin of the downstream bus HIGH.
   """
   @spec scl_becomes_io(t, boolean) :: {:ok, t} | {:error, term}
-  def scl_becomes_io(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 6, value)),
+  def scl_becomes_io(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 6)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def scl_becomes_io(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_status(conn, &clear_bit(&1, 6)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -530,8 +575,13 @@ defmodule PCA9641 do
     Routine to handle housekeeping tasks.
   """
   @spec test_interrupt_pin(t, boolean) :: {:ok, t} | {:error, term}
-  def test_interrupt_pin(%PCA9641{conn: conn} = dev, value) when is_boolean(value) do
-    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 5, value)),
+  def test_interrupt_pin(%PCA9641{conn: conn} = dev, true) do
+    with {:ok, conn} <- Registers.update_status(conn, &set_bit(&1, 5)),
+         do: {:ok, %{dev | conn: conn}}
+  end
+
+  def test_interrupt_pin(%PCA9641{conn: conn} = dev, false) do
+    with {:ok, conn} <- Registers.update_status(conn, &clear_bit(&1, 5)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -827,7 +877,7 @@ defmodule PCA9641 do
     downstream bus.
   - `true` -> Interrupt generated; this master has a lock on the downstream bus.
   """
-  @spec lock_grant_interrupt?(pid) :: boolean
+  @spec lock_grant_interrupt?(t) :: boolean
   def lock_grant_interrupt?(%PCA9641{conn: conn}) do
     with {:ok, data} <- Registers.read_interrupt_status(conn),
          true <- get_bool(data, 2),
@@ -982,7 +1032,7 @@ defmodule PCA9641 do
   @doc """
   Write shared mailbox.
   """
-  @spec write_mailbox(pid, mailbox_data) :: :ok | {:error, term}
+  @spec write_mailbox(t, mailbox_data) :: {:ok, t} | {:error, term}
   def write_mailbox(%PCA9641{conn: conn} = dev, <<msb, lsb>>) do
     with {:ok, conn} <- Registers.write_mailbox_lsb(conn, <<lsb>>),
          {:ok, conn} <- Registers.write_mailbox_msb(conn, <<msb>>),

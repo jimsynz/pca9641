@@ -1,7 +1,6 @@
 defmodule PCA9641Test do
   use ExUnit.Case, async: true
   use Mimic
-  use Bitwise
   alias PCA9641.Registers, as: Registers
   alias Wafer.Driver.Fake, as: Driver
 
@@ -927,11 +926,13 @@ defmodule PCA9641Test do
         {:ok, conn}
       end)
 
-      assert {:ok, conn} = PCA9641.abandon_downstream_bus(conn())
+      assert {:ok, _conn} = PCA9641.abandon_downstream_bus(conn())
     end
   end
 
   defp conn do
-    with {:ok, conn} <- Driver.acquire([]), {:ok, conn} <- PCA9641.acquire(conn: conn), do: conn
+    with {:ok, conn} <- Driver.acquire([]),
+         {:ok, conn} <- PCA9641.acquire(conn: conn),
+         do: conn
   end
 end

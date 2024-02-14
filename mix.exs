@@ -27,7 +27,7 @@ defmodule PCA9641.MixProject do
       maintainers: ["James Harton <james@harton.nz>"],
       licenses: ["HL3-FULL"],
       links: %{
-        "Source" => "https://gitlab.com/jimsy/pca9641"
+        "Source" => "https://harton.dev/james/pca9641"
       }
     ]
   end
@@ -38,9 +38,11 @@ defmodule PCA9641.MixProject do
       {:circuits_gpio, "~> 1.0", optional: true},
       {:circuits_i2c, "~> 2.0", optional: true},
       {:credo, "~> 1.6", only: ~w[dev test]a, runtime: false},
-      {:earmark, "~> 1.4", only: ~w[dev test]a},
+      {:dialyxir, "~> 1.4", only: ~w[dev test]a, runtime: false},
+      {:doctor, "~> 0.21", only: ~w[dev test]a, runtime: false},
+      {:earmark, "~> 1.4", only: ~w[dev test]a, runtime: false},
       {:elixir_ale, "~> 1.2", optional: true},
-      {:ex_doc, "~> 0.30", only: ~w[dev test]a},
+      {:ex_doc, "~> 0.30", only: ~w[dev test]a, runtime: false},
       {:git_ops, "~> 2.4", only: ~w[dev test]a, runtime: false},
       {:mimic, "~> 1.5", only: :test},
       {:wafer, "~> 1.0"}
