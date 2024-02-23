@@ -11,7 +11,11 @@ defmodule PCA9641.MixProject do
       start_permanent: Mix.env() == :prod,
       description: "Driver for PCA9641 2-channel I2C bus master arbiter chip",
       deps: deps(),
-      package: package()
+      package: package(),
+      docs: [
+        main: "readme",
+        extras: ["README.md", "CHANGELOG.md"]
+      ]
     ]
   end
 
@@ -27,7 +31,10 @@ defmodule PCA9641.MixProject do
       maintainers: ["James Harton <james@harton.nz>"],
       licenses: ["HL3-FULL"],
       links: %{
-        "Source" => "https://harton.dev/james/pca9641"
+        "Source" => "https://harton.dev/james/pca9641",
+        "GitHub" => "https://github.com/jimsynz/pca9641",
+        "Changelog" => "https://docs.harton.nz/james/pca9641/changelog.html",
+        "Sponsor" => "https://github.com/sponsors/jimsynz"
       }
     ]
   end

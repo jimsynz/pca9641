@@ -13,8 +13,8 @@ mastering devices.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `pca9641` to your list of dependencies in `mix.exs`:
+`pca9641` is [available in Hex](https://hex.pm/packages/pca9641), the package
+can be installed by adding `pca9641` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -24,9 +24,9 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/pca9641](https://hexdocs.pm/pca9641).
+Documentation for the latest release can be found on
+[HexDocs](https://hexdocs.pm/pca9641) and for the `main` branch on
+[docs.harton.nz](https://docs.harton.nz/james/pca9641).
 
 ## Github Mirror
 
