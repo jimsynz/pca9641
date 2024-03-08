@@ -31,7 +31,7 @@ Documentation for the latest release can be found on
 ## Github Mirror
 
 This repository is mirrored [on Github](https://github.com/jimsynz/pca9641)
-from it's primary location [on my Forejo instance](https://harton.dev/james/pca9641).
+from it's primary location [on my Forgejo instance](https://harton.dev/james/pca9641).
 Feel free to raise issues and open PRs on Github.
 
 ## License
