@@ -68,7 +68,6 @@ defmodule PCA9641 do
       {:ok, %PCA9641{conn: conn, int_pin: int_pin, state: :unknown}}
     else
       :error -> {:error, "`PCA9641.acquire/1` requires the `conn` option."}
-      {:error, reason} -> {:error, reason}
     end
   end
 
