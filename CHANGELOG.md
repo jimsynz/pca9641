@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.2](https://harton.dev/james/pca9641/compare/v2.0.1...v2.0.2) (2026-01-22)
+
+
+
+
+### Bug Fixes:
+
+* update mimic expectation for Mimic v2 compatibility
+
 ## [v2.0.1](https://harton.dev/james/pca9641/compare/v2.0.0...v2.0.1) (2024-02-23)
 
 

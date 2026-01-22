@@ -19,7 +19,7 @@ can be installed by adding `pca9641` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:pca9641, "~> 2.0.1"}
+    {:pca9641, "~> 2.0.2"}
   ]
 end
 ```
