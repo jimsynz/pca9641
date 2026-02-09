@@ -42,7 +42,7 @@ defmodule PCA9641.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:circuits_gpio, "~> 1.0", optional: true},
+      {:circuits_gpio, "~> 2.0", optional: true},
       {:circuits_i2c, "~> 2.0", optional: true},
       {:credo, "~> 1.6", only: ~w[dev test]a, runtime: false},
       {:dialyxir, "~> 1.4", only: ~w[dev test]a, runtime: false},
