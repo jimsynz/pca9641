@@ -716,15 +716,7 @@ defmodule PCA9641 do
   @spec interrupt_reason(t) :: {:ok, [interrupt_name()]} | {:error, reason :: any}
   def interrupt_reason(%PCA9641{conn: conn}) do
     with {:ok, <<value>>} <- Registers.read_interrupt_status(conn) do
-      reasons =
-        @interrupts_fwd
-        |> Enum.reduce([], fn {name, idx}, interrupts ->
-          if get_bit(value, idx) == 1,
-            do: [name | interrupts],
-            else: interrupts
-        end)
-
-      {:ok, reasons}
+      {:ok, active_interrupts(value)}
     end
   end
 
@@ -768,13 +760,7 @@ defmodule PCA9641 do
 
   def interrupt_enable(%PCA9641{conn: conn} = dev, interrupts) do
     with {:ok, conn} <-
-           Registers.update_interrupt_mask(conn, fn data ->
-             interrupts
-             |> Enum.reduce(data, fn interrupt_name, data ->
-               bit = Map.fetch!(@interrupts_fwd, interrupt_name)
-               clear_bit(data, bit)
-             end)
-           end),
+           Registers.update_interrupt_mask(conn, &disable_interrupt_bits(&1, interrupts)),
          do: {:ok, %{dev | conn: conn}}
   end
 
@@ -784,17 +770,7 @@ defmodule PCA9641 do
   @spec interrupt_enabled(t) :: {:ok, [interrupt_name()]} | {:error, term}
   def interrupt_enabled(%PCA9641{conn: conn}) do
     with {:ok, data} <- Registers.read_interrupt_mask(conn) do
-      interrupts =
-        data
-        |> find_zeroes()
-        |> Enum.reduce([], fn i, interrupts ->
-          case Map.fetch(@interrupts_bkwd, i) do
-            {:ok, name} -> [name | interrupts]
-            _ -> interrupts
-          end
-        end)
-
-      {:ok, interrupts}
+      {:ok, enabled_interrupts(data)}
     end
   end
 
@@ -1053,6 +1029,32 @@ defmodule PCA9641 do
   """
   @spec wait_for_bus_init(t) :: {:ok, t} | {:error, :bus_init_fail}
   def wait_for_bus_init(conn), do: do_wait_for_bus_init(conn, 0)
+
+  defp active_interrupts(value) do
+    Enum.reduce(@interrupts_fwd, [], fn {name, idx}, interrupts ->
+      if get_bit(value, idx) == 1,
+        do: [name | interrupts],
+        else: interrupts
+    end)
+  end
+
+  defp disable_interrupt_bits(data, interrupts) do
+    Enum.reduce(interrupts, data, fn interrupt_name, data ->
+      bit = Map.fetch!(@interrupts_fwd, interrupt_name)
+      clear_bit(data, bit)
+    end)
+  end
+
+  defp enabled_interrupts(data) do
+    data
+    |> find_zeroes()
+    |> Enum.reduce([], fn i, interrupts ->
+      case Map.fetch(@interrupts_bkwd, i) do
+        {:ok, name} -> [name | interrupts]
+        _ -> interrupts
+      end
+    end)
+  end
 
   defp do_wait_for_bus_init(_conn, 10), do: {:error, :bus_init_fail}
 
