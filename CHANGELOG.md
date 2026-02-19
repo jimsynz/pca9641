@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.3](https://harton.dev/james/pca9641/compare/v2.0.2...v2.0.3) (2026-02-19)
+
+
+
+
+### Bug Fixes:
+
+* extract helpers to reduce nesting depth in interrupt functions by James Harton
+
 ## [v2.0.2](https://harton.dev/james/pca9641/compare/v2.0.1...v2.0.2) (2026-01-22)
 
 
