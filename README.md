@@ -1,6 +1,5 @@
 # PCA9641
 
-[![Build Status](https://drone.harton.dev/api/badges/james/pca9641/status.svg)](https://drone.harton.dev/james/pca9641)
 [![Hex.pm](https://img.shields.io/hexpm/v/pca9641.svg)](https://hex.pm/packages/pca9641)
 [![Hippocratic License HL3-FULL](https://img.shields.io/static/v1?label=Hippocratic%20License&message=HL3-FULL&labelColor=5e2751&color=bc8c3d)](https://firstdonoharm.dev/version/3/0/full.html)
 
@@ -25,8 +24,7 @@ end
 ```
 
 Documentation for the latest release can be found on
-[HexDocs](https://hexdocs.pm/pca9641) and for the `main` branch on
-[docs.harton.nz](https://docs.harton.nz/james/pca9641).
+[HexDocs](https://hexdocs.pm/pca9641).
 
 ## Github Mirror
 
