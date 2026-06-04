@@ -29,7 +29,7 @@ defmodule PCA9641.MixProject do
   def package do
     [
       maintainers: ["James Harton <james@harton.nz>"],
-      licenses: ["HL3-FULL"],
+      licenses: ["Apache-2.0"],
       links: %{
         "Source" => "https://harton.dev/james/pca9641",
         "GitHub" => "https://github.com/jimsynz/pca9641",
