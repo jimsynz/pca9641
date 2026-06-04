@@ -5,7 +5,6 @@ defmodule PCA9641 do
   alias PCA9641.Registers
   alias Wafer.Conn
   import Wafer.Twiddles
-  require Logger
 
   @moduledoc """
   PCA9641 Driver for Elixir using Wafer.
