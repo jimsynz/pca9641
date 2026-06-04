@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.4](https://harton.dev/james/pca9641/compare/v2.0.3...v2.0.4) (2026-06-04)
+
+
+
+
+### Bug Fixes:
+
+* Elixir 1.20 compiler warnings by James Harton
+
 ## [v2.0.3](https://harton.dev/james/pca9641/compare/v2.0.2...v2.0.3) (2026-02-19)
 
 
